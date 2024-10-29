@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Project } from "./schemas/project.schema";
@@ -11,8 +11,12 @@ export class ProjectsService {
   ) {}
 
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
-    const newProject = new this.projectModel(createProjectDto);
-    return newProject.save();
+    try {
+      const newProject = new this.projectModel(createProjectDto);
+      return newProject.save();
+    } catch (error) {
+      throw new BadRequestException("Invalid Project format");
+    }
   }
 
   async findAll(): Promise<Project[]> {
@@ -20,7 +24,11 @@ export class ProjectsService {
   }
 
   async findOne(id: string): Promise<Project> {
-    return this.projectModel.findById(id).exec();
+    try {
+      return this.projectModel.findById(id).exec();
+    } catch (error) {
+      throw new BadRequestException("Invalid Project ID format");
+    }
   }
 
   async update(
