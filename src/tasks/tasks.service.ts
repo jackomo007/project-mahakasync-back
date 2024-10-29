@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Task, TaskDocument } from "./schemas/task.schema";
@@ -10,23 +14,35 @@ export class TasksService {
   constructor(@InjectModel(Task.name) private taskModel: Model<TaskDocument>) {}
 
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const newTask = new this.taskModel(createTaskDto);
-    return newTask.save();
+    try {
+      const newTask = new this.taskModel(createTaskDto);
+      return newTask.save();
+    } catch (error) {
+      throw new BadRequestException("Invalid Task format");
+    }
   }
 
   async findAll(projectId?: string): Promise<Task[]> {
-    if (projectId) {
-      return this.taskModel.find({ projectId }).exec();
+    try {
+      if (projectId) {
+        return this.taskModel.find({ projectId }).exec();
+      }
+      throw new BadRequestException("There is not projectId in the request");
+    } catch (error) {
+      throw new BadRequestException("None task was found");
     }
-    return this.taskModel.find().exec();
   }
 
   async findOne(id: string): Promise<Task> {
-    const task = await this.taskModel.findById(id).exec();
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
+    try {
+      const task = await this.taskModel.findById(id).exec();
+      if (!task) {
+        throw new NotFoundException(`Task not found`);
+      }
+      return task;
+    } catch (error) {
+      throw new BadRequestException("Invalid Task ID format");
     }
-    return task;
   }
 
   async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
@@ -34,7 +50,7 @@ export class TasksService {
       .findByIdAndUpdate(id, updateTaskDto, { new: true })
       .exec();
     if (!updatedTask) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
+      throw new NotFoundException(`Task not found`);
     }
     return updatedTask;
   }
@@ -42,7 +58,7 @@ export class TasksService {
   async delete(id: string): Promise<Task> {
     const deletedTask = await this.taskModel.findByIdAndDelete(id).exec();
     if (!deletedTask) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
+      throw new NotFoundException(`Task not found`);
     }
     return deletedTask;
   }
