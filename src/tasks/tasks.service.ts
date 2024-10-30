@@ -27,7 +27,7 @@ export class TasksService {
       if (projectId) {
         return this.taskModel.find({ projectId }).exec();
       }
-      throw new BadRequestException("There is not projectId in the request");
+      return this.taskModel.find().exec();
     } catch (error) {
       throw new BadRequestException("None task was found");
     }
