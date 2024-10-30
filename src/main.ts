@@ -17,6 +17,11 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
+  app.enableCors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle("Project Mahasync API")
     .setDescription("API documentation for Mahasync Platform")
@@ -26,6 +31,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api-docs", app, document);
 
-  await app.listen(3000);
+  await app.listen(8000);
 }
 bootstrap();
