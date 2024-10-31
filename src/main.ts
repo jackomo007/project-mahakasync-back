@@ -5,7 +5,11 @@ import { AllExceptionsFilter } from "./filters/http-exception.filter";
 import { ResponseInterceptor } from "./interceptors/response.intercertor";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
-async function bootstrap() {
+import { createServer, Server } from "http";
+
+let server: Server;
+
+async function createAppInstance() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({
@@ -18,7 +22,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.enableCors({
-    origin: "http://localhost:3000",
+    origin: true,
     credentials: true,
   });
 
@@ -27,10 +31,16 @@ async function bootstrap() {
     .setDescription("API documentation for Mahasync Platform")
     .setVersion("1.0")
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api-docs", app, document);
 
-  await app.listen(8000);
+  await app.init();
+  server = createServer(app.getHttpAdapter().getInstance());
 }
-bootstrap();
+
+export default async function handler(req: any, res: any) {
+  if (!server) {
+    await createAppInstance();
+  }
+  server.emit("request", req, res);
+}
